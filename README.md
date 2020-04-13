@@ -3,11 +3,11 @@ py-kms is a port of node-kms by [markedsword](http://forums.mydigitallife.info/m
 
 # Features
 - Responds to V4, V5, and V6 KMS requests.
-- Supports activating Windows 7/8/8.1/2008R2/2012/2012R2 and Office 2010/2013.
+- Supports activating Windows 7/8/8.1/10/2008R2/2012/2012R2/2016 and Office 2010/2013/2016/2019.
 - It's written in Python.
 
 # Dependencies
-- Python 2.7.x or Python 2.6.x with the "argparse" module installed.
+- Python **2.7.x** or Python **2.6.x** with the "argparse" module installed.
 - If the "pytz" module is installed, the "Request Time" in the verbose output will be converted into local time. Otherwise, it will be in UTC.
 
 # Usage

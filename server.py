@@ -13,6 +13,16 @@ from rpcBase import rpcBase
 
 config = {}
 
+def get_host_ip():
+    try:
+        s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8',80))
+        ip=s.getsockname()[0]
+    finally:
+        s.close()
+
+    return ip
+
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("ip", nargs="?", action="store", default="0.0.0.0", help="The IP address to listen on. The default is \"0.0.0.0\" (all interfaces).", type=str)
@@ -29,41 +39,42 @@ def main():
 		config['verbose'] = True
 	server = SocketServer.TCPServer((config['ip'], config['port']), kmsServer)
 	server.timeout = 5
-	print "TCP server listening at %s on port %d." % (config['ip'],config['port'])
+	print ("current ip: %s" % get_host_ip())
+	print ("TCP server listening at %s on port %d." % (config['ip'],config['port']))
 	server.serve_forever()
 
 class kmsServer(SocketServer.BaseRequestHandler):
 	def setup(self):
 		self.connection = self.request
-		print "Connection accepted: %s:%d" % (self.client_address[0],self.client_address[1])
+		print ("Connection accepted: %s:%d" % (self.client_address[0],self.client_address[1]))
 
 	def handle(self):
 		while True:
 			# self.request is the TCP socket connected to the client
 			try:
 				self.data = self.connection.recv(1024)
-			except socket.error, e:
+			except socket.error as e:
 				if e[0] == 104:
-					print "Error: Connection reset by peer."
+					print ("Error: Connection reset by peer.")
 					break
 				else:
 					raise
 			if self.data == '' or not self.data:
-				print "No data received!"
+				print ("No data received!")
 				break
 			# self.data = bytearray(self.data.strip())
 			# print binascii.b2a_hex(str(self.data))
 			packetType = MSRPCHeader(self.data)['type']
 			if packetType == rpcBase.packetType['bindReq']:
 				if config['verbose']:
-					print "RPC bind request received."
+					print ("RPC bind request received.")
 				handler = rpcBind.handler(self.data, config)
 			elif packetType == rpcBase.packetType['request']:
 				if config['verbose']:
-					print "Received activation request."
+					print ("Received activation request.")
 				handler = rpcRequest.handler(self.data, config)
 			else:
-				print "Error: Invalid RPC request type", packetType
+				print ("Error: Invalid RPC request type", packetType)
 				break
 
 			handler.populate()
@@ -72,15 +83,15 @@ class kmsServer(SocketServer.BaseRequestHandler):
 
 			if packetType == rpcBase.packetType['bindReq']:
 				if config['verbose']:
-					print "RPC bind acknowledged."
+					print ("RPC bind acknowledged.")
 			elif packetType == rpcBase.packetType['request']:
 				if config['verbose']:
-					print "Responded to activation request."
+					print ("Responded to activation request.")
 				break
 
 	def finish(self):
 		self.connection.close()
-		print "Connection closed: %s:%d" % (self.client_address[0],self.client_address[1])
+		print ("Connection closed: %s:%d" % (self.client_address[0],self.client_address[1]))
 
 if __name__ == "__main__":
 	main()
